@@ -357,15 +357,15 @@ class LENET5:
         path = os.path.join(mainPath,str(method),fname)
         arr_files = np.load(path)
         self.epoch_loss, self.epoch_acc, self.epoch_weight,self.epochs = arr_files['arr_0'], arr_files['arr_1'], arr_files['arr_2'], arr_files['arr_3']
-        
+        """
         for i in range(0,epochs,1):
             print("Epoch:: {} Loss::{} \t\tAcc::{} \tM-Weight::{}".format(i, self.epoch_loss[i], self.epoch_acc[i], self.epoch_weight[i]))
         for i in range(0,len(self.valid_steps),1):
             print("Val-Step:: {} Loss::{} \t\tAcc::{}".format(self.valid_steps[i], self.valid_loss_history[i], self.valid_acc_history[i]))
         print(self.loss_history.shape, self.acc_history.shape,self.weights_history.shape, self.n_steps)
-        #for i in range(0,self.n_steps,1):
-        #    print("Steps:: {} Loss::{} \t\tAcc::{} \tM-Weight::{}".format(i, self.loss_history[i], self.acc_history[i], self.weights_history[i] ))
-    
+        for i in range(0,self.n_steps,1):
+            print("Steps:: {} Loss::{} \t\tAcc::{} \tM-Weight::{}".format(i, self.loss_history[i], self.acc_history[i], self.weights_history[i] ))
+        """
     def load_parameters(self, **params):
         method = params.get("method", "adam")
         epochs = params.get("epochs", 500)
@@ -477,8 +477,8 @@ def main():
     Y_test = np.zeros((len_label, kelas))
     Y_test[np.arange(len_label), testLabel[range(0, len_label)]] = 1
     
-    method = "rmsprop"
-    epochs = 501
+    method = "adam"
+    epochs = 500
     mylenet = LENET5(X_train, Y_train, X_test, Y_test, method=method,epochs=epochs)
     
     """ Train """
@@ -492,18 +492,22 @@ def main():
     mylenet.save_parameters(mainPath)
     mylenet.lenet_predictions(X_test, Y_test)
     """
-    """ load training history """
+    mylenet.load_parameters(mainPath=mainPath,epochs=epochs,method=method,)
+    mylenet.lenet_predictions(X_test, Y_test)
+    
+    """ load training history
     mylenet.load_train_details(mainPath=mainPath,epochs=epochs,method=method,)
     
-    """ testing one image """
     """
-    mylenet.load_parameters(mainPath=mainPath,epochs=epochs,method=method,)
-    imgpath= "C:/Users/ASUS/Documents/softmax-test/data_kain/gringsing/gringsing_60.jpg"
+    """ testing one image """
+    
+    imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_kain/gringsing/gringsing_61.jpg"
     temp = os.path.split(imgpath)
     prob = mylenet.one_image(mylenet.layers, imgpath )
+    print("image test::",imgpath)
     print("\nFile Name ::", temp[1], " Tipe kain ::", data.labelName[np.argmax(prob)], "||" ,
           "confidence ::", prob[0,np.argmax(prob)])
-    """
+    
 if __name__=='__main__':
     main()
 
