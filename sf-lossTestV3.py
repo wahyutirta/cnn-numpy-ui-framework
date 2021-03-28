@@ -165,14 +165,14 @@ class LENET5:
                 self.loss_history += [loss]
                 LENET5.backpropagation(y, self.layers)          #check this gradient
                 LENET5.update_parameters(self.layers, self.optimizer ,x.shape[0], alpha, zeta, method)
-                print("Step: ", step, ":: Loss: ", loss, "weight_sum: ", weight_sum, "acc ::", accuracy)
+                #print("Step: ", step, ":: Loss: ", loss, "weight_sum: ", weight_sum, "acc ::", accuracy)
                 step += 1
                 steps += [step]
             self.optimizer.post_update_params()
             temp_loss = np.array(temp_loss)
             diff = abs(np.average(temp_loss) - prev_loss)
             prev_loss = np.average(temp_loss)
-            print("\r=============================================== diffrent loss", diff)
+            #print("\r=============================================== diffrent loss", diff)
             XY = list(zip(X_train, Y_train))
             np.random.shuffle(XY)
             new_X, new_Y = zip(*XY)

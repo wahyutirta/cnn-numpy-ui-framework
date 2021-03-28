@@ -32,7 +32,7 @@ class Loss_CategoricalCrossentropy(Loss):
 
         # Number of samples in a batch
         samples = len(y_pred)
-
+        """
         # Clip data to prevent division by 0
         # Clip both sides to not drag mean towards any value
         # to prevent  log 0, clipp y_pred to the lowest value
@@ -41,8 +41,9 @@ class Loss_CategoricalCrossentropy(Loss):
         # and substract 1 with 1e-7
         # -np.log(1+1e-7) = -9.999999505838704e-08 --> error become negative
         # -np.log(1-1e-7) = 1.0000000494736474e-07 --> positive error
+        """
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
-
+        """
         # Probabilities for target values -
         # only if categorical labels --> [0,1,2,3] --> 4 samples
         # e.g, softmax_outputs :
@@ -54,8 +55,10 @@ class Loss_CategoricalCrossentropy(Loss):
         # sample 1 expected to be dog
         # sample 2 expected to be cat
         # sample 3 expected to be cat
+        """
         if len(y_true.shape) == 1:
             correct_confidences = y_pred_clipped[range(samples),y_true]
+            """
             # array slicing 
             # softmax_outputs is a numpy array and you can index it like plain Python lists 
             # softmax_outputs[5:10] or multi-dimensional NumPy arrays 
@@ -90,10 +93,11 @@ class Loss_CategoricalCrossentropy(Loss):
         # [[1,0,0], dog
         # [0,1,0], cat
         # [0,0,1]] cat
+        """
         elif len(y_true.shape) == 2:
             multiply = np.multiply(y_pred_clipped, y_true)
             
-            
+            """
             # e.g
             # [[0.7, 0.1, 0.2], * [[1,0,0],
             # [0.1, 0.5, 0.4], *   [0,1,0],
@@ -102,9 +106,10 @@ class Loss_CategoricalCrossentropy(Loss):
             # [[0.7  0.   0.  ]
             # [0.   0.5  0.  ]
             # [0.   0.   0.08]]
-            correct_confidences = np.sum(multiply, axis=1)
             # sum in row wise but keepdims = false so it becomes
             # [0.7  0.5  0.08]
+            """
+            correct_confidences = np.sum(multiply, axis=1)
             
             #print(y_pred_clipped, y_true)
             #print(multiply)
