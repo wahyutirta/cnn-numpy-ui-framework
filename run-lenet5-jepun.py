@@ -53,13 +53,13 @@ class LENET5:
         # Sub-sampling-2
         pool4 = MAX_POOL_LAYER(stride=2)
         # Fully Connected-1
-        fc5 = FC_LAYER(120, (1350, 120), )#filename=b_dir+"fc6.npz")
+        fc5 = FC_LAYER(675, (1350, 675), )#filename=b_dir+"fc6.npz")
         relu5 = RELU_LAYER()
         # Fully Connected-2
-        fc6 = FC_LAYER(84, (120, 84), )#filename=b_dir+"fc8.npz")
+        fc6 = FC_LAYER(325, (675, 325), )#filename=b_dir+"fc8.npz")
         relu6 = RELU_LAYER()
         # Fully Connected-3
-        output = FC_LAYER(4, (84, 4), )#filename=b_dir+"fc10.npz")
+        output = FC_LAYER(4, (325, 4), )#filename=b_dir+"fc10.npz")
         softmax_crossentropy = Activation_Softmax_Loss_CategoricalCrossentropy()
         ##softmax = SOFTMAX_LAYER()
         self.layers = [conv1, relu1, pool2, conv3, relu3, pool4, fc5, relu5, fc6, relu6, output, softmax_crossentropy]

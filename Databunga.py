@@ -48,7 +48,7 @@ class Data:
                     arr_label.append(i-1)
                     self.count+=1
                     
-                dataset = np.array(arr_img)
+                dataset = np.array(arr_img, dtype='float64') / 255
                 #print(np.array(arr_img).shape)
                 label = np.array(arr_label)
                 dataset, label = self.unison_shuffled_copies_4(dataset, label)
@@ -77,13 +77,13 @@ class Data:
         return self.trainSet, self.trainLabel, self.testSet, self.testLabel
                 
 
-#mainPath = os.path.dirname(os.path.abspath(__file__)) #file path main.py
-#workPath = os.path.split(mainPath) #path working folder (whole file project)
-#imagePath = "data_jepun"
-#data = Data(workPath,imagePath)
-#trainSet, trainLabel, testSet, testLabel = data.load(trainRatio=0.8,testRatio=0.2)
+mainPath = os.path.dirname(os.path.abspath(__file__)) #file path main.py
+workPath = os.path.split(mainPath) #path working folder (whole file project)
+imagePath = "data_jepun"
+data = Data(workPath,imagePath)
+trainSet, trainLabel, testSet, testLabel = data.load(trainRatio=0.8,testRatio=0.2)
 
-#print("ts",trainSet.shape)
-#print("tl",trainLabel.shape)
-#print("tts",testSet.shape)
-#print("ttl",testLabel.shape)
+print("ts",trainSet.shape)
+print("tl",trainLabel.shape)
+print("tts",testSet.shape)
+print("ttl",testLabel.shape)
