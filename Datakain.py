@@ -96,8 +96,8 @@ class Data:
             
         return self.trainSet, self.trainLabel, self.testSet, self.testLabel
 
-#mainPath = os.path.dirname(os.path.abspath(__file__)) #file path main.py
-#workPath = os.path.split(mainPath) #path working folder (whole file project)
-#imagePath = "data_kain"
-#data = Data(workPath,imagePath)
-#data.load(trainRatio=0.8,testRatio=0.2)
+mainPath = os.path.dirname(os.path.abspath(__file__)) #file path main.py
+workPath = os.path.split(mainPath) #path working folder (whole file project)
+imagePath = "data_kain"
+data = Data(workPath,imagePath)
+data.load(trainRatio=0.8,testRatio=0.2)

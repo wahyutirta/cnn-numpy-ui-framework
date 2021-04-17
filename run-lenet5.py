@@ -501,7 +501,7 @@ def main():
     """
     """ testing one image """
     
-    imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_kain/gringsing/gringsing_61.jpg"
+    imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_kain/wajik/wajik_15.jpg"
     temp = os.path.split(imgpath)
     prob = mylenet.one_image(mylenet.layers, imgpath )
     print("image test::",imgpath)
