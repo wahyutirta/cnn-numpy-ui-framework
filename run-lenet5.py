@@ -5,7 +5,7 @@ Created on Tue Jan 12 12:47:32 2021
 @author: ASUS
 """
 import os
-from conv2 import *
+from conv import *
 from relu import *
 from fc import *
 from Activation_Softmax import Activation_Softmax
@@ -21,7 +21,7 @@ import timeit
 from sklearn.metrics import accuracy_score
 
 from tqdm import tqdm
-from Datakain import Data
+from Databunga import Data
 
 
 class LENET5:
@@ -477,8 +477,8 @@ def main():
     Y_test = np.zeros((len_label, kelas))
     Y_test[np.arange(len_label), testLabel[range(0, len_label)]] = 1
     
-    method = "adam"
-    epochs = 20
+    method = "rmsprop"
+    epochs = 40
     mylenet = LENET5(X_train, Y_train, X_test, Y_test, method=method,epochs=epochs)
     
     """ Train """

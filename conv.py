@@ -100,7 +100,7 @@ class CONV_LAYER:
         if stride == 1:
             # scipy.signal.convolve2d doesn't have any attribute for stride, so it works for only stride = 1
             # Rotate kernel by 180
-            print("1")
+            
             kernel_180 = np.rot90(self.kernel, 2, (2,3))
             for img in range(N):
                 for conv_depth in range(K):
@@ -109,7 +109,7 @@ class CONV_LAYER:
                     self.feature_map[img, conv_depth] += self.bias[conv_depth]
         else:
             # Manual convolution when stride > 1, but above method is faster.
-            print("2")
+            
             for img in range(N):
                 for conv_depth in range(K):
                     for h in range(0, H + 2*pad_len - K_H + 1, stride):
