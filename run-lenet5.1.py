@@ -478,19 +478,19 @@ def main():
     Y_test[np.arange(len_label), testLabel[range(0, len_label)]] = 1
     
     method = "adam"
-    epochs = 20
+    epochs = 500
     mylenet = LENET5(X_train, Y_train, X_test, Y_test, method=method,epochs=epochs)
     
     """ Train """
-
+    """
     start = timeit.default_timer()
-    mylenet.lenet_train(method=method, epochs=epochs, batch=32, alpha=0.001, zeta=0)
+    mylenet.lenet_train(method=method, epochs=epochs, batch=32, alpha=0.01, zeta=0)
     stop = timeit.default_timer()
     print("Training time:", stop - start)
     print("Training ", end="")
     
     mylenet.save_parameters(mainPath)
-
+    """
     """ load training history """
     #mylenet.load_train_details(mainPath=mainPath,epochs=epochs,method=method,)
     
@@ -498,7 +498,7 @@ def main():
     
     mylenet.load_parameters(mainPath=mainPath,epochs=epochs,method=method,)
     mylenet.lenet_predictions(X_test, Y_test)
-    imgpath= "C:/Users/ASUS/Documents/softmax-test/data_kain/gringsing/gringsing_60.jpg"
+    imgpath= "C:/Users/ASUS/Documents/skripsi/cnn-numpy/data_kain/gringsing/gringsing_60.jpg"
     temp = os.path.split(imgpath)
     prob = mylenet.one_image(mylenet.layers, imgpath )
     print("\nFile Name ::", temp[1], " Tipe kain ::", data.labelName[np.argmax(prob)], "||" ,

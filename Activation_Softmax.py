@@ -8,7 +8,7 @@ class Activation_Softmax:
     def forward(self, inputs):
         # Remember input values
         self.inputs = inputs
-        """
+        
         # Get unnormalized probabilities
         # np.exp return e power given input
         
@@ -23,10 +23,9 @@ class Activation_Softmax:
         # substract input with its biggest value
         # [ 0. -3.59  -2.415]
         # [1. 0.02759833 0.08936734]
-        """
         
         exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
-        """
+        
         # what is keepdims = 1, axis = 1
         # [[4.8, 1.21, 2.385] --first sample,         
         # [8.9, -1.81, 0.2] --second sample,
@@ -39,7 +38,6 @@ class Activation_Softmax:
         # Normalize them for each sample
         # turn this :  [121.51041751893969, 3.3534846525504487, 10.85906266492961]
         # to this : [0.89528266 0.02470831 0.08000903] --> sum = 1
-        """
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
         #print(inputs)
         #print(exp_values)
