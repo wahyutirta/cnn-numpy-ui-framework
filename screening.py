@@ -62,6 +62,6 @@ class Data:
 
 mainPath = os.path.dirname(os.path.abspath(__file__)) #file path main.py
 workPath = os.path.split(mainPath) #path working folder (whole file project)
-imagePath = "bcfix"
+imagePath = "data_jepun"
 data = Data(workPath,imagePath)
 data.load(trainRatio=0.8,testRatio=0.2)

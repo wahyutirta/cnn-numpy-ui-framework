@@ -26,7 +26,7 @@ from Databunga import Data
 
 class LENET5:
     """docstring forLENET5."""
-    def __init__(self, t_input, t_output, v_input, v_output, method, epochs):
+    def __init__(self, t_input, t_output, v_input, v_output, method, epochs, batch, learningRate):
         """
         Computes the forward pass of Conv Layer.
         Input:
@@ -70,6 +70,8 @@ class LENET5:
         self.Yv = v_output
         self.method = method
         self.epochs = epochs
+        self.batch = batch
+        self.learningRate = learningRate
         
         self.acc_history = []
         self.loss_history = []
@@ -77,6 +79,7 @@ class LENET5:
         self.epoch_acc = []
         self.epoch_loss = []
         self.epoch_weight = []
+        self.epoch_array = []
         
         self.weights_history = []
         self.gradient_history = []
@@ -178,7 +181,7 @@ class LENET5:
                     "zeta"(regularization parameter), "method" (gradient method),
                     "epochs", ...
         """
-        alpha  = params.get("alpha", 0.01)            # Default 0.1
+        alpha  = params.get("learningRate", 0.001)            # Default 0.1
         self.batch  = params.get("batch", 32)             # Default 50
         zeta   = params.get("zeta", 0)               # Default 0 (No regularization)
         method = params.get("method", "adam")            # Default
@@ -255,6 +258,7 @@ class LENET5:
             self.epoch_loss += [average_loss]
             self.epoch_acc += [average_acc]
             self.epoch_weight += [average_weight]
+            self.epoch_array += [ep]
             
             print("Epoch::{} \tAve acc::{} \tAve loss::{} \tAve weight::{}".format(ep, average_acc,average_loss,average_weight))
             
@@ -284,7 +288,10 @@ class LENET5:
         #loss = LENET5.loss_function(predictions, Y, wsum=weight_sum, zeta=0.99)
         y_true = np.argmax(Y, axis=1)
         y_pred = np.argmax(predictions, axis=1)
+        #print(y_pred, y_true)
         print("Dataset accuracy: ", accuracy_score(y_true, y_pred)*100)
+        print("dataset ACC",np.mean(y_pred==y_true)*100)
+        print("Dataset loss", loss)
         print("FeedForward time:", stop - start)
         pass
 
@@ -489,34 +496,35 @@ def main():
     Y_test = np.zeros((len_label, kelas))
     Y_test[np.arange(len_label), testLabel[range(0, len_label)]] = 1
     
-    method = "rmsprop"
-    epochs = 41
-    batch = 32
-    learningRate = 0.001
+    method = "adam"
+    epochs = 201
+    batch = 16
+    learningRate = 0.0001
     
-    mylenet = LENET5(X_train, Y_train, X_test, Y_test, method=method,epochs=epochs)
+    mylenet = LENET5(X_train, Y_train, X_test, Y_test, method=method,epochs=epochs, batch=batch, learningRate=learningRate )
     
     """ Train """
 
     start = timeit.default_timer()
-    mylenet.lenet_train(method=method, epochs=epochs, batch=batch, alpha=0.001, zeta=0)
+    #mylenet.lenet_train(method=method, epochs=epochs, batch=batch, learningRate=learningRate, zeta=0)
     stop = timeit.default_timer()
     print("Training time:", stop - start)
     print("Training ", end="")
     
-    mylenet.save_parameters(mainPath)
+    #mylenet.save_parameters(mainPath)
 
     """ load training history """
     mylenet.load_train_details(mainPath=mainPath,epochs=epochs,method=method, batch=batch, learningRate=learningRate )
     
     """ testing one image """
-    
+    print("Params: batch=", batch, " learning rate=", learningRate, "method=", method, "epochs=", epochs)
+        
     mylenet.load_parameters(mainPath=mainPath,epochs=epochs,method=method, batch=batch, learningRate=learningRate)
     mylenet.lenet_predictions(X_test, Y_test)
-    imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_jepun/cendana/20210407_105647.jpg"
+    imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_jepun/sudamala/20210407_121951.jpg"
     temp = os.path.split(imgpath)
     prob = mylenet.one_image(mylenet.layers, imgpath )
-    print("\nFile Name ::", temp[1], " Tipe kain ::", data.labelName[np.argmax(prob)], "||" ,
+    print("\nFile Name ::", temp[1], " Tipe bunga ::", data.labelName[np.argmax(prob)], "||" ,
           "confidence ::", prob[0,np.argmax(prob)])
     
 if __name__=='__main__':
