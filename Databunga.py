@@ -97,10 +97,10 @@ class Data:
                     self.arrayFNameTest = np.concatenate((self.arrayFNameTest, arrayFNameTest), axis = 0)
                     self.arrayFNameTrain = np.concatenate((self.arrayFNameTrain, arrayFNameTrain), axis = 0)
 
-        #print(self.testLabel)
+        #print(self.arrayFNameTest)
         self.trainSet, self.trainLabel, self.arrayFNameTrain = self.unison_shuffled_copies_4(self.trainSet, self.trainLabel, self.arrayFNameTrain)
         self.testSet, self.testLabel, self.arrayFNameTest  = self.unison_shuffled_copies_4(self.testSet, self.testLabel, self.arrayFNameTest)
-            
+        #print(self.arrayFNameTest)
         return self.trainSet, self.trainLabel, self.testSet, self.testLabel
                 
 
