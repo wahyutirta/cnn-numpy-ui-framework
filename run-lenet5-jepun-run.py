@@ -145,8 +145,8 @@ class LENET5:
             wsum += ws
         return inp, loss, wsum
 
-    @staticmethod
-    def backpropagation(Y, layers):
+
+    def backpropagation(self, Y):
         """
         Computes final output of neural network by passing
         output of one layer to another.
@@ -157,21 +157,21 @@ class LENET5:
             grad: gradient
         """
         delta = Y
-        for layer in layers[::-1]:
+        for layer in self.layers[::-1]:
             if isinstance(layer, Activation_Softmax_Loss_CategoricalCrossentropy):
                 delta = layer.backward(layer.output,delta)
             else :
                 delta = layer.backward(delta)
 
-    @staticmethod
-    def update_parameters(layers, optimizer ,batch_size, a, z, m):
+
+    def update_parameters(self):
         """
         Update weight parameters of each layer
         """
-        for layer in layers:
+        for layer in self.layers:
             if isinstance(layer, (CONV_LAYER, FC_LAYER)):
                 #layer.update_kernel(batch=batch_size, alpha=a, zeta=z, method=m)
-                optimizer.update_params(layer)
+                self.optimizer.update_params(layer)
 
 
     def lenet_train(self, **params):
@@ -227,8 +227,8 @@ class LENET5:
                 temp_loss.append(loss)
                 temp_weight.append(weight_sum)
 
-                self.backpropagation(y, self.layers)          #check this gradient
-                self.update_parameters(self.layers, self.optimizer ,x.shape[0], alpha, zeta, method)
+                self.backpropagation(y)          #check this gradient
+                self.update_parameters()
                 print("Step::", step, "\tAcc::", accuracy,"\tLoss:: ", loss, "\tWeight_sum:: ", weight_sum)
                 step += 1
             
@@ -283,7 +283,8 @@ class LENET5:
     
         
     
-    def lenet_predictions(self,X, Y):
+    @staticmethod
+    def lenet_predictions(layers, X, Y):
         """
         Predicts the ouput and computes the accuracy on the dataset provided.
         Input:
@@ -291,43 +292,33 @@ class LENET5:
             Y: True output of shape (Num, Classes)
         """
         start = timeit.default_timer()
-        predictions, loss ,weight_sum = LENET5.feedForward(X, self.layers, Y)
+        predictions, loss ,weight_sum = LENET5.feedForward(X, layers, Y)
         stop = timeit.default_timer()
 
-        #loss = LENET5.loss_function(predictions, Y, wsum=weight_sum, zeta=0.99)
-        y_true = np.argmax(Y, axis=1)
-        y_pred = np.argmax(predictions, axis=1)
-        #print(y_pred, y_true)
-        print("Dataset accuracy: ", accuracy_score(y_true, y_pred)*100)
-        print("dataset ACC",np.mean(y_pred==y_true)*100)
-        print("Dataset loss", loss)
-        print("FeedForward time:", stop - start)
-        pass
+        if len(Y.shape) == 2 and len(predictions.shape) == 2 :
+            y_true = np.argmax(Y, axis=1)
+            y_pred = np.argmax(predictions, axis=1)
+            
+        elif len(predictions.shape) == 2 :
+            y_pred = np.argmax(predictions, axis=1)
+            y_true = Y
 
+        else:
+            y_true = Y
+
+        acc = accuracy_score(y_true, y_pred)*100
+        
+        time = stop - start
+        
+        return acc, loss, time
+    
     @staticmethod
-    def plots(x, y, z, steps):
-        try:
-            plt.figure(1)
-            plt.plot(x, '-bo', label="Loss")
-            plt.xlabel('Number of iterations', fontsize=18)
-            plt.ylabel('Loss', fontsize=18)
-            plt.title('Training Error rate vs Number of iterations')
-            plt.savefig("Loss_function_vs_iter.jpeg")
-        except:
-            pass
+    def printpred(acc, loss, time):
+        print("Dataset accuracy: ",acc)
+        print("Dataset loss", loss)
+        print("FeedForward time:", time)
 
-        try:
-            plt.figure(2)
-            plt.plot(steps, y, '-bo', label="Training Loss")
-            plt.plot(steps, z, '-ro', label="Validation Loss")
-            plt.xlabel('Number of iterations', fontsize=18)
-            plt.ylabel('Loss Value', fontsize=18)
-            plt.title('Training and Validation error rates vs number of iterations')
-            plt.legend(loc='upper right')
-            plt.savefig("error_rates.jpeg")
-        except:
-            pass
-        pass
+
     
     def save_parameters(self,mainPath):
         """
@@ -418,53 +409,6 @@ class LENET5:
                 layer.load(path,layer.kernel.shape)
                 
 
-    def check_gradient(self):
-        """
-        Computes the numerical gradient and compares with Analytical gradient
-        """
-        sample = 10
-        epsilon = 1e-4
-        X_sample = self.X[range(sample)]
-        Y_sample = self.Y[range(sample)]
-        predictions, weight_sum = LENET5.feedForward(X_sample, self.layers)
-        LENET5.backpropagation(Y_sample, self.layers)
-
-        abs_diff = 0
-        abs_sum = 0
-
-        for layer in self.layers:
-            if not isinstance(layer, (CONV_LAYER, FC_LAYER)):
-                continue
-            i = 0
-            print("\n\n\n\n\n")
-            print(type(layer))
-            del_k = layer.delta_K + (0.99*layer.kernel/sample)
-            kb = chain(np.nditer(layer.kernel, op_flags=['readwrite']), np.nditer(layer.bias, op_flags=['readwrite']))
-            del_kb = chain(np.nditer(del_k, op_flags=['readonly']), np.nditer(layer.delta_b, op_flags=['readonly']))
-
-            for w, dw in zip(kb, del_kb):
-                w += epsilon
-                pred, w_sum = LENET5.feedForward(X_sample, self.layers)
-                loss_plus = LENET5.loss_function(pred, Y_sample, wsum=w_sum, zeta=0.99)
-
-                w -= 2*epsilon
-                pred, w_sum = LENET5.feedForward(X_sample, self.layers)
-                loss_minus = LENET5.loss_function(pred, Y_sample, wsum=w_sum, zeta=0.99)
-
-                w += epsilon
-                numerical_gradient = (loss_plus - loss_minus)/(2*epsilon)
-
-                abs_diff += np.square(numerical_gradient - dw)
-                abs_sum  += np.square(numerical_gradient + dw)
-                print(i, "Numerical Gradient: ", numerical_gradient, "Analytical Gradient: ", dw)
-                if not np.isclose(numerical_gradient, dw, atol=1e-4):
-                    print("Not so close")
-                if i >= 10:
-                    break
-                i += 1
-
-        print("Relative difference: ", np.sqrt(abs_diff)/np.sqrt(abs_sum))
-        pass
     
     @staticmethod
     def one_image(layers, path):
@@ -484,6 +428,27 @@ class LENET5:
                 inp, ws = layer.forward(inp)
         #print("prob",inp)
         return output
+    
+    @staticmethod
+    def simulate(lenet,data,numOfSim):
+        arrAcc = []
+        arrLoss = []
+        arrTime = []            
+        for i in range(numOfSim):
+            testSet, labelSet, fNameSet = data.loadTest()  
+            acc, loss, time = lenet.lenet_predictions(lenet.layers, testSet, labelSet)
+            arrAcc.append(acc)
+            arrLoss.append(loss)
+            arrTime.append(time)
+        
+        print("Acc array", arrAcc)
+        aveAcc = np.average(np.array(arrAcc))
+        aveLoss = np.average(np.array(arrLoss))
+        aveTime = np.average(np.array(arrTime))
+        
+        lenet.printpred(aveAcc, aveLoss, aveTime)
+        return aveAcc, aveLoss, aveTime
+        
 
     
 def main():
@@ -515,12 +480,12 @@ def main():
     """ Train """
 
     start = timeit.default_timer()
-    mylenet.lenet_train(method=method, epochs=epochs, batch=batch, learningRate=learningRate, zeta=0)
+    #mylenet.lenet_train(method=method, epochs=epochs, batch=batch, learningRate=learningRate, zeta=0)
     stop = timeit.default_timer()
     print("Training time:", stop - start)
     print("Training ", end="")
     
-    mylenet.save_parameters(mainPath)
+    #mylenet.save_parameters(mainPath)
 
     """ load training history """
     mylenet.load_train_details(mainPath=mainPath,epochs=epochs,method=method, batch=batch, learningRate=learningRate )
@@ -529,12 +494,18 @@ def main():
     print("Params: batch=", batch, " learning rate=", learningRate, "method=", method, "epochs=", epochs)
         
     mylenet.load_parameters(mainPath=mainPath,epochs=epochs,method=method, batch=batch, learningRate=learningRate)
-    mylenet.lenet_predictions(X_test, Y_test)
+    
+    
+    
     imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_jepun/sudamala/sudamala_(1).jpg"
     temp = os.path.split(imgpath)
     prob = mylenet.one_image(mylenet.layers, imgpath )
     print("\nFile Name ::", temp[1], " Tipe bunga ::", data.labelName[np.argmax(prob)], "||" ,
           "confidence ::", prob[0,np.argmax(prob)])
+    
+    acc, loss, time = mylenet.lenet_predictions(mylenet.layers,X_test, Y_test)
+    mylenet.printpred(acc, loss, time)
+    aveAcc, aveLoss, aveTime = mylenet.simulate(mylenet, data, 5)
     
 if __name__=='__main__':
     main()
