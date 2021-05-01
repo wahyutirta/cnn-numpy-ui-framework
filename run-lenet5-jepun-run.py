@@ -506,7 +506,7 @@ def main():
     Y_test[np.arange(len_label), testLabel[range(0, len_label)]] = 1
     
     method = "adam"
-    epochs = 151
+    epochs = 201
     batch = 32
     learningRate = 0.001
     
