@@ -16,6 +16,29 @@ class Data:
         p = np.random.permutation(len(a))
         return a[p], b[p] , c[p]
     
+    def loadLabel(self):
+        arr_Namelabel = []
+        self.count = 0
+        for i, (dirpath, dirnames, filenames) in tqdm(enumerate(os.walk(self.imagePath)), desc= "Loading Image Data"):
+            #print('{} {} {}'.format(repr(dirpath), repr(dirnames), repr(filenames)))
+            #print(i)
+            if dirpath is not self.imagePath:
+                dirpath_components = dirpath.split("/")
+                listImageTrain = []
+                listLabelTrain = []
+                listImageTest = []
+                listLabelTest = []
+                testFName = []
+                trainFName = []
+                semantic_label = dirpath_components[-1]
+                
+                _, label = os.path.split(semantic_label)
+
+                #print("\nProcessing {}, {}".format(semantic_label,i))
+                arr_Namelabel.append(label)
+        labelArray = np.array(arr_Namelabel)
+        return labelArray
+    
     def load(self,trainRatio=0.8,testRatio=0.2):
         temp_mod = math.ceil(trainRatio/testRatio)
         #arr_img = []
@@ -99,32 +122,34 @@ class Data:
 
         #print(self.arrayFNameTest)
         self.trainSet, self.trainLabel, self.arrayFNameTrain = self.unison_shuffled_copies_4(self.trainSet, self.trainLabel, self.arrayFNameTrain)
-        self.testSet, self.testLabel, self.arrayFNameTest  = self.unison_shuffled_copies_4(self.testSet, self.testLabel, self.arrayFNameTest)
+        #self.testSet, self.testLabel, self.arrayFNameTest  = self.unison_shuffled_copies_4(self.testSet, self.testLabel, self.arrayFNameTest)
         #print(self.arrayFNameTest)
-        return self.trainSet, self.trainLabel, self.testSet, self.testLabel
+        return self.trainSet, self.trainLabel, self.arrayFNameTrain ,self.testSet, self.testLabel, self.arrayFNameTest
     
 
-    def loadTest(self,trainRatio=0.8,testRatio=0.2):
+    def loadtest(self,trainRatio=0.8,testRatio=0.2):
         temp_mod = math.ceil(trainRatio/testRatio)
 
-        testSet = None
         arr_Namelabel = []
+        self.count = 0
         for i, (dirpath, dirnames, filenames) in tqdm(enumerate(os.walk(self.imagePath)), desc= "Loading Image Data"):
-
+            #print('{} {} {}'.format(repr(dirpath), repr(dirnames), repr(filenames)))
+            #print(i)
             if dirpath is not self.imagePath:
                 dirpath_components = dirpath.split("/")
-                imageList = []
-                labelList = []
-                
-                fName = []
+
+                listImageTest = []
+                listLabelTest = []
+                testFName = []
                 semantic_label = dirpath_components[-1]
                 
                 _, label = os.path.split(semantic_label)
 
-
+                #print("\nProcessing {}, {}".format(semantic_label,i))
                 arr_Namelabel.append(label)
-                count = 0
-
+                self.count = 0
+                train = 0
+                test = 0
 
                 for f in filenames:
                     #load images
@@ -134,43 +159,54 @@ class Data:
                     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                     img = rearrange(img, ' h w c ->  c h w ')
 
-                    labelList.append(i-1)
-                    imageList.append(img)
-                    fName.append(f)
-
+                    #arr_label.append(i-1)
+                    # if mod append to test
+                    if self.count % temp_mod == 0:
                         
-                    count+=1
+                        listImageTest.append(img)
+                        listLabelTest.append(i-1)
+                        testFName.append(f)
+                        test+= 1
+                    # if not mod append to train
+                    else:
+                        pass
+                        
+                    self.count+=1
         
+                arrayImageTest = np.array(listImageTest, dtype='float64') / 255
 
-                imageArray = np.array(imageList, dtype='float64') / 255
                 #print(np.array(arr_img).shape)
-                labelArray = np.array(labelList)
-                fNameArray = np.array(fName)
-                
-                size = math.ceil(count*testRatio)
-                #print("size",size)
-                #print("countt",count)
-                imageArray, labelArray, fNameArray = self.unison_shuffled_copies_4(imageArray, labelArray, fNameArray)
-                    
+                arrayLabelTest = np.array(listLabelTest)
 
-                if testSet is None:
-                    testSet = imageArray[:size,:,:,:]
-                    labelSet = labelArray[:size]
-                    fNameSet = fNameArray[:size]
+                arrayFNameTest = np.array(testFName)
+
+                
+                self.labelName = np.array(arr_Namelabel)
+                self.jum_kelas = len(self.labelName)
+
+                if not hasattr(self, 'testSet'):
+
+                    self.testSet = arrayImageTest
+                    self.testLabel = arrayLabelTest
+ 
+                    self.arrayFNameTest = arrayFNameTest
                 else:
-                    testSet = np.concatenate((testSet, imageArray[:size,:,:,:]), axis = 0)
-                    labelSet = np.concatenate((labelSet, labelArray[:size]), axis = 0)
-                    fNameSet = np.concatenate((fNameSet, fNameArray[:size]), axis = 0)
-                           
-        testSet, labelSet, fNameSet = self.unison_shuffled_copies_4(testSet, labelSet, fNameSet)
-        return testSet, labelSet, fNameSet
+
+                    self.testSet = np.concatenate((self.testSet, arrayImageTest), axis = 0)
+                    self.testLabel = np.concatenate((self.testLabel, arrayLabelTest), axis = 0)
+                    self.arrayFNameTest = np.concatenate((self.arrayFNameTest, arrayFNameTest), axis = 0)
+
+        #print(self.arrayFNameTest)
+        #self.testSet, self.testLabel, self.arrayFNameTest  = self.unison_shuffled_copies_4(self.testSet, self.testLabel, self.arrayFNameTest)
+        #print(self.arrayFNameTest)
+        return self.testSet, self.testLabel, self.arrayFNameTest
                 
 
-mainPath = os.path.dirname(os.path.abspath(__file__)) #file path main.py
-workPath = os.path.split(mainPath) #path working folder (whole file project)
-imagePath = "data_jepun"
-data = Data(workPath,imagePath)
-trainSet, trainLabel, testSet, testLabel = data.load(trainRatio=0.8,testRatio=0.2)
+#mainPath = os.path.dirname(os.path.abspath(__file__)) #file path main.py
+#workPath = os.path.split(mainPath) #path working folder (whole file project)
+#imagePath = "data_jepun"
+#data = Data(workPath,imagePath)
+#trainSet, trainLabel, testSet, testLabel = data.load(trainRatio=0.8,testRatio=0.2)
 
 #print("ts",trainSet.shape)
 #print("tl",trainLabel.shape)
@@ -181,4 +217,4 @@ mainPath = os.path.dirname(os.path.abspath(__file__)) #file path main.py
 workPath = os.path.split(mainPath) #path working folder (whole file project)
 imagePath = "data_jepun"
 data = Data(workPath,imagePath)
-dataSet, dataLabelSet, datafNameSet = data.loadTest(trainRatio=0.8,testRatio=0.2)
+testSet, testLabelSet, testfNameSet = data.loadtest(trainRatio=0.8,testRatio=0.2)

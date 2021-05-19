@@ -458,7 +458,7 @@ def main():
     
     
     data = Data(workPath, imagePath)
-    X_train, trainLabel, X_test, testLabel = data.load()
+    X_train, trainLabel, fnametrain ,X_test, testLabel, fnametest = data.load()
     kelas = data.jum_kelas
     len_label = trainLabel.shape[0]
     
@@ -473,7 +473,7 @@ def main():
     method = "adam"
     epochs = 201
     batch = 32
-    learningRate = 0.001
+    learningRate = 0.0001
     
     mylenet = LENET5(X_train, Y_train, X_test, Y_test, method=method,epochs=epochs, batch=batch, learningRate=learningRate )
     
@@ -505,7 +505,7 @@ def main():
     
     acc, loss, time = mylenet.lenet_predictions(mylenet.layers,X_test, Y_test)
     mylenet.printpred(acc, loss, time)
-    aveAcc, aveLoss, aveTime = mylenet.simulate(mylenet, data, 5)
+    #aveAcc, aveLoss, aveTime = mylenet.simulate(mylenet, data, 5)
     
 if __name__=='__main__':
     main()
