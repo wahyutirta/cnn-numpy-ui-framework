@@ -296,6 +296,27 @@ class LENET5:
         return acc, loss, time
     
     @staticmethod
+    def lenet_predictions_return(lenet, layers, X, Y,fname, labelname):
+        """
+        Predicts the ouput and computes the accuracy on the dataset provided.
+        Input:
+            X: Input of shape (Num, depth, height, width)
+            Y: True output of shape (Num, Classes)
+        """
+        start = timeit.default_timer()
+        predictions, loss ,weight_sum = LENET5.feedForward(X, layers, Y)
+        stop = timeit.default_timer()
+
+        #loss = LENET5.loss_function(predictions, Y, wsum=weight_sum, zeta=0.99)
+        y_true = np.argmax(Y, axis=1)
+        y_pred = np.argmax(predictions, axis=1)
+        #print(y_pred, y_true)
+        acc = accuracy_score(y_true, y_pred)*100
+        time = stop - start
+        
+        return y_true, y_pred
+    
+    @staticmethod
     def print_test_detail(Y_true,predictions,fname,labelname):
         Y_pred = np.argmax(predictions, axis=1)
         check = "salah"
@@ -305,9 +326,9 @@ class LENET5:
             if y_true == y_pred:
                 check = "benar"
             recog = labelname[np.argmax(y_pred)]
-            print("{}".format(check))
+            #print("{}".format(check))
         
-            #print("Model Recog::{} class pred {} confidence {:.5f} ============= Y_true::{} Result {} File_name {}  ".format(recog, y_pred, np.amax(pred), y_true, check ,name))
+            print("Model Recog::{} class pred {} confidence {:.5f} ============= Y_true::{} Result {} File_name {}  ".format(recog, y_pred, np.amax(pred), y_true, check ,name))
         
     
     @staticmethod
@@ -506,6 +527,41 @@ class LENET5:
     def simulate(lenet,data,numOfSim):
         testSet, labelSet, fNameSet = data.loadTest()
         lenet.lenet_predictions(lenet.layers, testSet, labelSet)
+    
+    #layer + relu is one layer position
+    @staticmethod
+    def displayFeature(layers, path, layerPosition):
+        inp = cv2.imread(path)
+        inp = cv2.cvtColor(inp, cv2.COLOR_BGR2RGB)
+        counter = 0
+        if inp.shape[1] > 64 and inp.shape[0] > 64:
+            dim = (64, 64)
+            inp = cv2.resize(inp, dim, interpolation = cv2.INTER_AREA)
+        inp = rearrange(inp, ' h w c ->  c h w ')
+        
+        for layer in layers:
+            if isinstance(layer,CONV_LAYER) and len(inp.shape) == 3:
+                inp, ws = layer.forward(inp.reshape(1,inp.shape[0],inp.shape[1],inp.shape[2]))
+                
+            elif isinstance(layer, FC_LAYER) and len(inp.shape) == 4:
+                inp, ws = layer.forward(inp.reshape(inp.shape[0], inp.shape[1]*inp.shape[2]*inp.shape[3]))
+                
+            elif isinstance(layer, Activation_Softmax_Loss_CategoricalCrossentropy):
+                output = layer.guessing(inp)
+                return output
+            else:
+                inp, ws = layer.forward(inp)
+                if isinstance(layer,RELU_LAYER):
+                    counter += 1
+                    if layerPosition == counter:
+                        return inp[0]
+                elif isinstance(layer,MAX_POOL_LAYER):
+                    counter += 1
+                    if layerPosition == counter:
+                        return inp[0]
+            print(layer, counter)
+                
+        
         
     
     
@@ -536,7 +592,7 @@ def main():
     
     if mode == "train":
         mylenet = LENET5(X_train, Y_train, X_test, Y_test, method=method,epochs=epochs, batch=batch, learningRate=learningRate )
-    
+        
     
         layer_time = []
         
@@ -557,8 +613,8 @@ def main():
 
     elif mode == "test":
         mylenet = LENET5([], [], [], [], method=method,epochs=epochs, batch=batch, learningRate=learningRate )
-    
-    
+        imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_jepun/sudamala/sudamala_(1).jpg"
+        temp = os.path.split(imgpath)
         
         """ load training history """
         mylenet.load_train_details(mainPath=mainPath,epochs=epochs,method=method, batch=batch, learningRate=learningRate )
@@ -568,10 +624,14 @@ def main():
         
         mylenet.load_parameters(mainPath=mainPath,epochs=epochs,method=method, batch=batch, learningRate=learningRate)
     
-        acc, loss, time = mylenet.lenet_predictions(mylenet, mylenet.layers,X_test, Y_test,fNameTest, data.labelName)
-        mylenet.printpred(acc, loss, time)
+        #acc, loss, time = mylenet.lenet_predictions(mylenet, mylenet.layers,X_test, Y_test,fNameTest, data.labelName)
+        #mylenet.printpred(acc, loss, time)
+        prob = mylenet.one_image(mylenet.layers, imgpath )
+        print("\nFile Name ::", temp[1], " Tipe bunga ::", data.labelName[np.argmax(prob)], "||" ,
+          "confidence ::", prob[0,np.argmax(prob)])
+        
+        #mylenet.displayFeature(mylenet.layers, imgpath)
 
-    
     
 if __name__=='__main__':
     main()

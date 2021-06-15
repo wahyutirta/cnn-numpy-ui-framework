@@ -1,4 +1,4 @@
-from lenet_test import *
+from lenet5 import *
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -21,7 +21,7 @@ def plotimage(imgs):
         counter += 1
         
     plt.legend()
-    plt.savefig('FMAP.png', dpi=300)
+    #plt.savefig('FMAP.png', dpi=300)
 
     plt.show()
         
@@ -75,7 +75,7 @@ if mode == "train":
 
 elif mode == "test":
     mylenet = LENET5([], [], [], [], method=method,epochs=epochs, batch=batch, learningRate=learningRate )
-    imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_jepun/cendana/cendana_(50).jpg"
+    imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_jepun/Plumeria_rubra_L_cendana/cendana_(1).jpg"
     temp = os.path.split(imgpath)
         
     """ load training history """
@@ -88,11 +88,11 @@ elif mode == "test":
     
         #acc, loss, time = mylenet.lenet_predictions(mylenet, mylenet.layers,X_test, Y_test,fNameTest, data.labelName)
         #mylenet.printpred(acc, loss, time)
-    prob = mylenet.one_image(mylenet.layers, imgpath )
-    print("\nFile Name ::", temp[1], " Tipe bunga ::", data.labelName[np.argmax(prob)], "||" ,
-          "confidence ::", prob[0,np.argmax(prob)])
+    #prob = mylenet.one_image(mylenet.layers, imgpath )
+    #print("\nFile Name ::", temp[1], " Tipe bunga ::", data.labelName[np.argmax(prob)], "||" ,
+          #"confidence ::", prob[0,np.argmax(prob)])
         
-    feature = mylenet.displayFeature(mylenet.layers, imgpath, 4)
+    feature = mylenet.displayFeature(mylenet.layers, imgpath, 1)
     print(feature)
     img = feature.astype(np.uint8)
     plotimage(img)
