@@ -19,7 +19,19 @@ workPath = os.path.split(mainPath) #path working folder (whole file project)
 imagePath = "data_jepun"
     
 data = Data(workPath, imagePath)
+
+"""
 X, y_train, xTest, y_test = data.loadGlcm()
+
+clf = neighbors.KNeighborsClassifier()
+clf.fit(X, y_train)
+print(clf)
+y_pred = clf.predict(xTest)
+#print (metrics.classification_report(y_test, y_pred))
+print(classification_report(y_test, y_pred, target_names=['Bali', 'Cendana', 'Indonesia pink', 'Tri color Sudamala']))
+"""
+
+X, y_train, xTest, y_test = data.loadHistogram()
 
 clf = neighbors.KNeighborsClassifier()
 clf.fit(X, y_train)

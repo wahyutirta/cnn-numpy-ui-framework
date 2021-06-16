@@ -18,7 +18,7 @@ class Data:
         return a[p], b[p] , c[p]
     
     @staticmethod
-    def unison_shuffled_copies_4( a , b):
+    def unison_shuffled_copies_2( a , b):
         assert len(a) == len(b)
         p = np.random.permutation(len(a))
         return a[p], b[p]
@@ -309,11 +309,98 @@ class Data:
                     
                     
         print("counter", self.count, self.counter)
-        self.trainSet, self.trainLabel = self.unison_shuffled_copies_4(self.trainSet, self.trainLabel)
-        self.testSet, self.testLabel = self.unison_shuffled_copies_4(self.testSet, self.testLabel)
+        self.trainSet, self.trainLabel = self.unison_shuffled_copies_2(self.trainSet, self.trainLabel)
+        self.testSet, self.testLabel = self.unison_shuffled_copies_2(self.testSet, self.testLabel)
         return self.trainSet, self.trainLabel, self.testSet, self.testLabel
 
+    def loadHistogram(self,trainRatio=0.8,testRatio=0.2):
+        temp_mod = math.ceil(trainRatio/testRatio)
 
+        arr_Namelabel = []
+        
+
+        self.counter = 0
+        for i, (dirpath, dirnames, filenames) in tqdm(enumerate(os.walk(self.imagePath)), desc= "Loading Image Data"):
+            #print('{} {} {}'.format(repr(dirpath), repr(dirnames), repr(filenames)))
+            #print(i)
+            if dirpath is not self.imagePath:
+                dirpath_components = dirpath.split("/")
+                listGlcmTrain = []
+                listLabelTrain = []
+                listGlcmTest = []
+                listLabelTest = []
+                
+                semantic_label = dirpath_components[-1]
+                
+                _, label = os.path.split(semantic_label)
+
+                #print("\nProcessing {}, {}".format(semantic_label,i))
+                arr_Namelabel.append(label)
+                self.count = 0
+                train = 0
+                test = 0
+                tempTrain = None
+                tempTest = None
+
+                for f in filenames:
+                    #load images
+                    file_path = os.path.join(dirpath, f)
+
+                    img = cv2.imread(file_path)
+                    hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+
+                    hist_h = cv2.calcHist( [hsv], [0], None, [180], [0, 180] )
+                    hist_h = hist_h.T
+                    
+                    if self.count % temp_mod != 0:
+                        
+                        if tempTrain is None:
+                            tempTrain = hist_h
+                            listLabelTrain.append(i-1)
+                        else:
+                            tempTrain = np.concatenate((tempTrain, hist_h))
+                            listLabelTrain.append(i-1)
+ 
+                        train+= 1
+                        
+                    # if not mod append to test
+                    else:
+                        if tempTest is None:
+                            tempTest = hist_h
+                            listLabelTest.append(i-1)
+                        else:
+                            tempTest = np.concatenate((tempTest, hist_h))
+                            listLabelTest.append(i-1)
+                        test+= 1
+                        
+                        
+                    self.count+=1
+                    self.counter+=1
+        
+                
+                
+                self.labelName = np.array(arr_Namelabel)
+                self.jum_kelas = len(self.labelName)
+
+                if not hasattr(self, 'trainSet'):
+                    self.trainSet = tempTrain
+                    self.trainLabel = listLabelTrain
+                    self.testSet = tempTest
+                    self.testLabel = listLabelTest
+                    
+                    
+                else:
+                    self.trainSet = np.concatenate((self.trainSet, tempTrain), axis = 0)
+                    self.trainLabel = np.concatenate((self.trainLabel, listLabelTrain), axis = 0)
+                    
+                    self.testSet = np.concatenate((self.testSet, tempTest), axis = 0)
+                    self.testLabel = np.concatenate((self.testLabel, listLabelTest), axis = 0)
+                    
+                    
+        print("counter", self.count, self.counter)
+        self.trainSet, self.trainLabel = self.unison_shuffled_copies_2(self.trainSet, self.trainLabel)
+        self.testSet, self.testLabel = self.unison_shuffled_copies_2(self.testSet, self.testLabel)
+        return self.trainSet, self.trainLabel, self.testSet, self.testLabel
 
 
 
