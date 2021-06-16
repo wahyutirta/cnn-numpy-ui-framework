@@ -613,8 +613,7 @@ def main():
 
     elif mode == "test":
         mylenet = LENET5([], [], [], [], method=method,epochs=epochs, batch=batch, learningRate=learningRate )
-        imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_jepun/sudamala/sudamala_(1).jpg"
-        temp = os.path.split(imgpath)
+        
         
         """ load training history """
         mylenet.load_train_details(mainPath=mainPath,epochs=epochs,method=method, batch=batch, learningRate=learningRate )
@@ -624,11 +623,13 @@ def main():
         
         mylenet.load_parameters(mainPath=mainPath,epochs=epochs,method=method, batch=batch, learningRate=learningRate)
     
-        #acc, loss, time = mylenet.lenet_predictions(mylenet, mylenet.layers,X_test, Y_test,fNameTest, data.labelName)
-        #mylenet.printpred(acc, loss, time)
-        prob = mylenet.one_image(mylenet.layers, imgpath )
-        print("\nFile Name ::", temp[1], " Tipe bunga ::", data.labelName[np.argmax(prob)], "||" ,
-          "confidence ::", prob[0,np.argmax(prob)])
+        acc, loss, time = mylenet.lenet_predictions(mylenet, mylenet.layers,X_test, Y_test,fNameTest, data.labelName)
+        mylenet.printpred(acc, loss, time)
+        #imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_jepun/sudamala/sudamala_(1).jpg"
+        #temp = os.path.split(imgpath)
+        #prob = mylenet.one_image(mylenet.layers, imgpath )
+        #print("\nFile Name ::", temp[1], " Tipe bunga ::", data.labelName[np.argmax(prob)], "||" ,
+          #"confidence ::", prob[0,np.argmax(prob)])
         
         #mylenet.displayFeature(mylenet.layers, imgpath)
 

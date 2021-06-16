@@ -4,6 +4,7 @@ import os
 import math
 from tqdm import tqdm
 from einops import rearrange, reduce, repeat
+from skimage.feature import greycomatrix, greycoprops
 
 class Data:
     def __init__(self, workPath, imagePath):
@@ -15,6 +16,12 @@ class Data:
         assert len(a) == len(b)
         p = np.random.permutation(len(a))
         return a[p], b[p] , c[p]
+    
+    @staticmethod
+    def unison_shuffled_copies_4( a , b):
+        assert len(a) == len(b)
+        p = np.random.permutation(len(a))
+        return a[p], b[p]
     
     def loadLabel(self):
         arr_Namelabel = []
@@ -202,6 +209,117 @@ class Data:
         return self.testSet, self.testLabel, self.arrayFNameTest
                 
 
+    def loadGlcm(self,trainRatio=0.8,testRatio=0.2):
+        temp_mod = math.ceil(trainRatio/testRatio)
+        #arr_img = []
+        #arr_label = []
+        arr_Namelabel = []
+        angless= [0., np.pi/4., np.pi/2., 3.*np.pi/4.]
+
+        #angless= [0.]
+
+        features = ['dissimilarity']
+
+        #features = ['dissimilarity','energy','homogeneity','contrast']
+        self.counter = 0
+        for i, (dirpath, dirnames, filenames) in tqdm(enumerate(os.walk(self.imagePath)), desc= "Loading Image Data"):
+            #print('{} {} {}'.format(repr(dirpath), repr(dirnames), repr(filenames)))
+            #print(i)
+            if dirpath is not self.imagePath:
+                dirpath_components = dirpath.split("/")
+                listGlcmTrain = []
+                listLabelTrain = []
+                listGlcmTest = []
+                listLabelTest = []
+                
+                semantic_label = dirpath_components[-1]
+                
+                _, label = os.path.split(semantic_label)
+
+                #print("\nProcessing {}, {}".format(semantic_label,i))
+                arr_Namelabel.append(label)
+                self.count = 0
+                train = 0
+                test = 0
+                tempTrain = None
+                tempTest = None
+
+                for f in filenames:
+                    #load images
+                    file_path = os.path.join(dirpath, f)
+                    #print(file_path)
+                    gray = cv2.imread(file_path,cv2.IMREAD_GRAYSCALE)
+                
+                    glcm = greycomatrix(gray, distances=[5], angles=angless, levels=256, symmetric=True, normed=True)
+
+                    temp_arr = None
+                    
+                    for feature in features:
+                    
+                        temp = greycoprops(glcm, feature)
+                        if temp_arr is None:
+                            temp_arr = temp
+                        else:
+                            temp_arr = np.concatenate((temp_arr, temp), axis=1)
+                    
+                    if self.count % temp_mod != 0:
+                        
+                        if tempTrain is None:
+                            tempTrain = temp_arr
+                            listLabelTrain.append(i-1)
+                        else:
+                            tempTrain = np.concatenate((tempTrain, temp_arr), axis=0)
+                            listLabelTrain.append(i-1)
+                        
+                        
+                        train+= 1
+                        
+                    # if not mod append to test
+                    else:
+                        if tempTest is None:
+                            tempTest = temp_arr
+                            listLabelTest.append(i-1)
+                        else:
+                            tempTest = np.concatenate((tempTest, temp_arr), axis=0)
+                            listLabelTest.append(i-1)
+                        test+= 1
+                        
+                        
+                    self.count+=1
+                    self.counter+=1
+        
+                
+                
+                self.labelName = np.array(arr_Namelabel)
+                self.jum_kelas = len(self.labelName)
+
+                if not hasattr(self, 'trainSet'):
+                    self.trainSet = tempTrain
+                    self.trainLabel = listLabelTrain
+                    self.testSet = tempTest
+                    self.testLabel = listLabelTest
+                    
+                    
+                else:
+                    self.trainSet = np.concatenate((self.trainSet, tempTrain), axis = 0)
+                    self.trainLabel = np.concatenate((self.trainLabel, listLabelTrain), axis = 0)
+                    
+                    self.testSet = np.concatenate((self.testSet, tempTest), axis = 0)
+                    self.testLabel = np.concatenate((self.testLabel, listLabelTest), axis = 0)
+                    
+                    
+        print("counter", self.count, self.counter)
+        self.trainSet, self.trainLabel = self.unison_shuffled_copies_4(self.trainSet, self.trainLabel)
+        self.testSet, self.testLabel = self.unison_shuffled_copies_4(self.testSet, self.testLabel)
+        return self.trainSet, self.trainLabel, self.testSet, self.testLabel
+
+
+
+
+
+
+
+
 #mainPath = os.path.dirname(os.path.abspath(__file__)) #file path main.py
 #workPath = os.path.split(mainPath) #path working folder (whole file project)
 #imagePath = "data_jepun"
@@ -213,8 +331,15 @@ class Data:
 #print("tts",testSet.shape)
 #print("ttl",testLabel.shape)
 
-mainPath = os.path.dirname(os.path.abspath(__file__)) #file path main.py
+
+"""
+"mainPath = os.path.dirname(os.path.abspath(__file__)) #file path main.py
 workPath = os.path.split(mainPath) #path working folder (whole file project)
 imagePath = "data_jepun"
 data = Data(workPath,imagePath)
-testSet, testLabelSet, testfNameSet = data.loadtest(trainRatio=0.8,testRatio=0.2)
+trainSet, trainLabelSet, testSet, testLabelSet = data.loadGlcm(trainRatio=0.8,testRatio=0.2)
+print("ts",trainSet.shape)
+print("tl",trainLabelSet.shape)
+print("tts",testSet.shape)
+print("ttl",testLabelSet.shape)
+"""
