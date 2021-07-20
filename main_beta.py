@@ -136,7 +136,8 @@ class App(QMainWindow):
         indeks = np.argmax(self.output)
 
         self.predLabel.setText(self.label[indeks])
-        self.probLabel.setText(str(self.output[0,indeks]))
+        pribability = str(self.output[0,indeks] *  100)
+        self.probLabel.setText(str(pribability + "%"))
         
         features1 = self.lenet.displayFeature(self.lenet.layers, self.filePath, 1)
         features1 = features1.astype(np.uint8)
