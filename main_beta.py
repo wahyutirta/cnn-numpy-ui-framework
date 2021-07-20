@@ -9,17 +9,17 @@ from PyQt5.QtWidgets import QDialog ,QApplication, QFileDialog, QWidget, QTextEd
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtGui import QImage
-
-import matplotlib
-matplotlib.use('Qt5Agg')
-from matplotlib.backends.backend_qt5agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib.ticker as ticker
-
 import cv2, imutils
 from einops import rearrange, reduce, repeat
 from lenet5 import *
 import numpy as np
+
+import matplotlib as plt
+plt.use('Qt5Agg')
+#matplotlib.use('Qt5Agg')
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib.ticker as ticker
 
 
 main_path = os.path.dirname(os.path.abspath(__file__)) #file path main.py
@@ -27,16 +27,27 @@ work_path = os.path.split(main_path) #path working folder (whole file project)
 ui_folder = os.path.join(main_path,"ui/") #ui_folder path
 
 
+class MplCanvas(FigureCanvas):
+    def __init__(self, parent=None, width=4, height=7, dpi=100):
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        
+        
+        super(MplCanvas, self).__init__(self.fig)
+        #self.fig.tight_layout()
+        
+		
+
+
 class error_window(QMainWindow):
     def __init__(self):
         super(error_window, self).__init__()
-        
+
 
 class App(QMainWindow):
     def __init__(self):
         super(App, self).__init__()
 
-        uic.loadUi(os.path.join(ui_folder,"main2.ui"), self)
+        self.ui = uic.loadUi(os.path.join(ui_folder,"main2.ui"), self)
         
         self.filePath = None
         self.methods = ["adam", "rmsprop"]
@@ -61,7 +72,20 @@ class App(QMainWindow):
         imagePath = "data_jepun"
         self.data = Data(main_path, imagePath)
         self.label = self.data.loadLabel()
-
+        
+        self.optimizerCombo.currentIndexChanged.connect(self.resetModel)
+        self.learningRateCombo.currentIndexChanged.connect(self.resetModel)
+        self.epochsCombo.currentIndexChanged.connect(self.resetModel)
+        self.batchCombo.currentIndexChanged.connect(self.resetModel)
+        
+        
+    def resetModel(self):
+        self.lenet = None
+        
+        if self.lenet == None:
+            self.output = self.modelLabel.setText("No Model")
+            print("model null")
+        
 
     def browseImage(self):
         self.filePath = QFileDialog.getOpenFileName(filter="Image (*.*)")[0]
@@ -70,7 +94,16 @@ class App(QMainWindow):
         print(self.filePath) 
         self.image = cv2.imread(self.filePath)
         self.setPhoto(self.image)
-        self.predLabel.setText("----")
+        
+        #clear canvas
+        self.canvas1 = MplCanvas(self, width=4, height=6, dpi=100)
+        self.ui.gridLayout_4.addWidget(self.canvas1, 1, 6, 1, 1)
+        self.canvas1.fig.clf()
+        
+        self.canvas2 = MplCanvas(self, width=4, height=6, dpi=100)
+        self.ui.gridLayout_4.addWidget(self.canvas2, 1, 7, 1, 1)
+        self.canvas2.fig.clf()
+
 
         
     def setPhoto(self,image):
@@ -104,15 +137,72 @@ class App(QMainWindow):
 
         self.predLabel.setText(self.label[indeks])
         self.probLabel.setText(str(self.output[0,indeks]))
+        
+        features1 = self.lenet.displayFeature(self.lenet.layers, self.filePath, 1)
+        features1 = features1.astype(np.uint8)
+        self.features1 = features1
+        
+        features2 = self.lenet.displayFeature(self.lenet.layers, self.filePath, 2)
+        features2 = features2.astype(np.uint8)
+        self.canvasManager(features1,features2)
+    
+    def canvasManager(self,features1, features2):
+        
+        self.canvas1 = MplCanvas(self, width=4, height=6, dpi=100)
+        self.ui.gridLayout_4.addWidget(self.canvas1, 1, 6, 1, 1)
+        App.plot(self.canvas1,features1)
+        
+        self.canvas2 = MplCanvas(self, width=4, height=6, dpi=100)
+        self.ui.gridLayout_4.addWidget(self.canvas2, 1, 7, 1, 1)
+        App.plot(self.canvas2,features2)
 
+        """
+        rows = 3
+        columns = 2
+        counter = 1
+        print(features.shape)
+        for feature in features:
+            
+            print(feature)
+            title = str("feature " + str(counter))
+            self.canvas.axes = self.canvas.fig.add_subplot(rows, columns, counter)
+            
+            
+            self.canvas.axes.imshow(feature)
+            self.canvas.axes.axis("off")
+            self.canvas.axes.set_title(title)
+            counter += 1
+            
+        self.canvas.draw()
+        """
+    @staticmethod
+    def plot(canvas,features):
+
+        rows = 3
+        columns = 2
+        counter = 1
+        print(features.shape)
+        for feature in features:
+            
+            print(feature)
+            title = str("feature " + str(counter))
+            canvas.axes = canvas.fig.add_subplot(rows, columns, counter)
+            
+            
+            canvas.axes.imshow(feature)
+            canvas.axes.axis("off")
+            canvas.axes.set_title(title)
+            counter += 1
+            
+        canvas.draw()
 
 
 app = QtWidgets.QApplication(sys.argv)
 window = App()
 widget = QtWidgets.QStackedWidget()
 widget.addWidget(window)
-widget.setFixedWidth(1090)
-widget.setFixedHeight(680)
+widget.setFixedWidth(1070)
+widget.setFixedHeight(660)
 widget.show()
 app.exec_()
 #sys.exit( app.exec_() )

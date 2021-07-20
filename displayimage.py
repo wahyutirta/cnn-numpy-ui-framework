@@ -92,7 +92,7 @@ elif mode == "test":
     #print("\nFile Name ::", temp[1], " Tipe bunga ::", data.labelName[np.argmax(prob)], "||" ,
           #"confidence ::", prob[0,np.argmax(prob)])
         
-    feature = mylenet.displayFeature(mylenet.layers, imgpath, 3)
+    feature = mylenet.displayFeature(mylenet.layers, imgpath, 1)
     
     img = feature.astype(np.uint8)
     plotimage(img)

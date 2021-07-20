@@ -559,7 +559,7 @@ class LENET5:
                     counter += 1
                     if layerPosition == counter:
                         return inp[0]
-            print(layer, counter)
+            #print(layer, counter)
                 
         
         
