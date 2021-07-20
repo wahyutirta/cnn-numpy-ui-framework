@@ -29,7 +29,7 @@ class App(QMainWindow):
     def __init__(self):
         super(App, self).__init__()
 
-        uic.loadUi(os.path.join(ui_folder,"predict.ui"), self)
+        uic.loadUi(os.path.join(ui_folder,"main2.ui"), self)
         
         self.filePath = None
         self.methods = ["adam", "rmsprop"]
@@ -103,8 +103,8 @@ app = QtWidgets.QApplication(sys.argv)
 window = App()
 widget = QtWidgets.QStackedWidget()
 widget.addWidget(window)
-widget.setFixedWidth(500)
-widget.setFixedHeight(500)
+#widget.setFixedWidth(500)
+#widget.setFixedHeight(500)
 widget.show()
 app.exec_()
 #sys.exit( app.exec_() )
