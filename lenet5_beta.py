@@ -26,7 +26,7 @@ from Databunga import Data
 
 class LENET5:
     """docstring forLENET5."""
-    
+    ##def __init__(self, t_input, t_output, v_input, v_output, method, epochs, batch, learningRate):
     def __init__(self, **params):
         
         self.X = params.get("t_input",[[[[]]]] )

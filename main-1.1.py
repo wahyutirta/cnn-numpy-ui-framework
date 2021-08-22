@@ -125,7 +125,8 @@ class App(QMainWindow):
         epochs = self.epochsCombo.currentText()
         batch = self.batchCombo.currentText()
         print(method, learningRate, epochs, batch)
-        self.lenet = LENET5([], [], [], [], method=method,epochs=epochs, batch=batch, learningRate=learningRate )
+        self.lenet = LENET5( method = method, epochs = epochs, batch = batch, learningRate = learningRate) 
+        
         self.lenet.load_parameters(mainPath=main_path,epochs=epochs,method=method, batch=batch, learningRate=learningRate)
         if self.lenet != None:
             self.output = self.modelLabel.setText("Model Loaded")
