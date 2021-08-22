@@ -5,13 +5,13 @@ Created on Tue Jan 12 12:47:32 2021
 @author: ASUS
 """
 import os
-from conv import *
-from relu import *
-from fc import *
-from Activation_Softmax import Activation_Softmax
-from loss import *
-from maxpool import *
-from Optimizernp import *
+from layers.conv import *
+from layers.relu import *
+from layers.fc import *
+from layers.Activation_Softmax import Activation_Softmax
+from layers.loss import *
+from layers.maxpool import *
+from layers.Optimizernp import *
 
 import cv2
 from einops import rearrange, reduce, repeat
