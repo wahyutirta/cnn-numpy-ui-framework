@@ -173,7 +173,7 @@ class LENET5:
         """
         for layer in self.layers:
             if isinstance(layer, (CONV_LAYER, FC_LAYER)):
-                #layer.update_kernel(batch=batch_size, alpha=a, zeta=z, method=m)
+                #layer.update_kernel(batch=batch_size, self.learningRate=a, zeta=z, method=m)
                 self.optimizer.update_params(layer)
 
 
@@ -185,15 +185,12 @@ class LENET5:
                     "zeta"(regularization parameter), "method" (gradient method),
                     "epochs", ...
         """
-        alpha  = params.get("learningRate", 0.001)            # Default 0.1
-        self.batch  = params.get("batch", 32)             # Default 50
-        zeta   = params.get("zeta", 0)               # Default 0 (No regularization)
-        method = params.get("method", "adam")            # Default
-        epochs = params.get("epochs", 500)             # Default 4
-        print("Training on params: batch=", self.batch, " learning rate=", alpha, " L2 regularization=", zeta, " method=", method, " epochs=", epochs)
         
-        print(method)
-        self.learningRate = alpha
+        zeta   = params.get("zeta", 0)               # Default 0 (No regularization)
+        
+        print("Training on params: batch=", self.batch, " learning rate=", self.learningRate, " L2 regularization=", zeta, " method=", self.method, " epochs=", self.epochs)
+        
+        
         X_train, Y_train = self.X, self.Y
         assert X_train.shape[0] == Y_train.shape[0]
         num_batches = int(np.ceil(X_train.shape[0] / self.batch))
@@ -202,16 +199,16 @@ class LENET5:
         X_batches = zip(np.array_split(X_train, num_batches, axis=0), np.array_split(Y_train, num_batches, axis=0))
         prev_loss = 0
         if not hasattr(self, 'optimizer'):
-            if (method == "gd_momentum"):
-                self.optimizer = Optimizer_SGD(learning_rate=alpha, decay=0.0, momentum=0.0)
-            elif (method == "adam"):
-                self.optimizer = Optimizer_Adam(learning_rate=alpha, decay=0.0,)
-            elif (method =="adagrad"):
-                    self.optimizer = Optimizer_Adagrad(learning_rate=alpha, decay=0., epsilon=1e-7)
-            elif (method == "rmsprop"):
-                    self.optimizer = Optimizer_RMSprop(learning_rate=alpha, decay=0., epsilon=1e-7, rho=0.9)
+            if (self.method == "gd_momentum"):
+                self.optimizer = Optimizer_SGD(learning_rate=self.learningRate, decay=0.0, momentum=0.0)
+            elif (self.method == "adam"):
+                self.optimizer = Optimizer_Adam(learning_rate=self.learningRate, decay=0.0,)
+            elif (self.method =="adagrad"):
+                    self.optimizer = Optimizer_Adagrad(learning_rate=self.learningRate, decay=0., epsilon=1e-7)
+            elif (self.method == "rmsprop"):
+                    self.optimizer = Optimizer_RMSprop(learning_rate=self.learningRate, decay=0., epsilon=1e-7, rho=0.9)
         
-        for ep in range(epochs):
+        for ep in range(self.epochs):
             temp_loss, temp_acc,temp_weight = [],[],[]
             loss = 0.0
             self.optimizer.pre_update_params()
@@ -369,25 +366,22 @@ class LENET5:
         pass
     
     def load_train_details(self, **params):
-        method = params.get("method", "adam")
-        epochs = params.get("epochs", 500)
-        batch = params.get("learningRate", 32)
-        learningRate = params.get("batch", 0.01)
+        
         mainPath = params.get("mainPath", "")
         
         
         fname = "valid_history" + self.modelName + ".npz"
-        path = os.path.join(mainPath,str(method),fname)
+        path = os.path.join(mainPath,str(self.method),fname)
         arr_files = np.load(path)
         self.valid_loss_history, self.valid_acc_history,self.valid_steps = arr_files['arr_0'], arr_files['arr_1'], arr_files['arr_2']
         
         fname = "step_history" + self.modelName + ".npz"
-        path = os.path.join(mainPath,str(method),fname)
+        path = os.path.join(mainPath,str(self.method),fname)
         arr_files = np.load(path)
         self.loss_history, self.acc_history,self.weights_history, self.n_steps = arr_files['arr_0'], arr_files['arr_1'], arr_files['arr_2'], arr_files['arr_3']
         
         fname = "epoch_history" + self.modelName + ".npz"
-        path = os.path.join(mainPath,str(method),fname)
+        path = os.path.join(mainPath,str(self.method),fname)
         arr_files = np.load(path)
         self.epoch_loss, self.epoch_acc, self.epoch_weight,self.epochs = arr_files['arr_0'], arr_files['arr_1'], arr_files['arr_2'], arr_files['arr_3']
         """
@@ -400,10 +394,7 @@ class LENET5:
         #    print("Steps:: {} Loss::{} \t\tAcc::{} \tM-Weight::{}".format(i, self.loss_history[i], self.acc_history[i], self.weights_history[i] ))
         """
     def load_parameters(self, **params):
-        method = params.get("method", "adam")
-        epochs = params.get("epochs", 500)
-        batch = params.get("batch", 32)
-        learningRate = params.get("learningRate", 0.001)
+        
         mainPath = params.get("mainPath", "")
         
         tqdm._instances.clear()
@@ -414,7 +405,7 @@ class LENET5:
                     layer.layer_name = layer_name
                 
                 fname = layer.layer_name + self.modelName + ".npz"
-                path = os.path.join(mainPath,str(method),fname)
+                path = os.path.join(mainPath,str(self.method),fname)
                 layer.load(path,layer.kernel.shape)
                 
             elif isinstance(layer, FC_LAYER):
@@ -422,7 +413,7 @@ class LENET5:
                     layer_name = "fc" + str(self.layers.index(layer))
                     layer.layer_name = layer_name
                 fname = layer.layer_name + self.modelName +".npz"
-                path = os.path.join(mainPath,str(method),fname)
+                path = os.path.join(mainPath,str(self.method),fname)
                 layer.load(path,layer.kernel.shape)
                 
 
@@ -558,11 +549,11 @@ def main():
     Y_test[np.arange(len_label), testLabel[range(0, len_label)]] = 1
     
     method = "adam"
-    epochs = 201
+    epochs = 81
     batch = 32
     learningRate = 0.0001
     
-    mode = "test"
+    mode = "train"
     name = "jepun"
     
     if mode == "train":
@@ -572,13 +563,13 @@ def main():
         layer_time = []
         
         start = timeit.default_timer()
-        mylenet.lenet_train(method=method, epochs=epochs, batch=batch, learningRate=learningRate, zeta=0)
+        mylenet.lenet_train()
         stop = timeit.default_timer()
         print("Training time:", stop - start)
         print("Training ", end="")
     
         mylenet.save_parameters(mainPath)
-        imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_jepun/sudamala/sudamala_(1).jpg"
+        imgpath= "C:/Users/ASUS/Documents/py/cnn-numpy/data_jepun/Plumeria_rubra_L_tri_color/sudamala_(1).jpg"
         temp = os.path.split(imgpath)
         prob = mylenet.one_image(mylenet.layers, imgpath )
         print("\nFile Name ::", temp[1], " Tipe bunga ::", data.labelName[np.argmax(prob)], "||" ,
@@ -592,12 +583,12 @@ def main():
         
         
         """ load training history """
-        mylenet.load_train_details(mainPath=mainPath,epochs=epochs,method=method, batch=batch, learningRate=learningRate )
+        mylenet.load_train_details(mainPath=mainPath)
     
         """ testing one image """
         print("Params: batch=", batch, " learning rate=", learningRate, "method=", method, "epochs=", epochs)
         
-        mylenet.load_parameters(mainPath=mainPath,epochs=epochs,method=method, batch=batch, learningRate=learningRate)
+        mylenet.load_parameters(mainPath=mainPath)
     
         acc, loss, time = mylenet.lenet_predictions(mylenet, mylenet.layers,X_test, Y_test,fNameTest, data.labelName)
         mylenet.printpred(acc, loss, time)
